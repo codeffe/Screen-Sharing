@@ -1,0 +1,171 @@
+
+<!-- Demo version: 2017.08.10 -->
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>SmartShare</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="shortcut icon" href="/demos/logo.png">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script>
+	var cook  = (document.cookie.match(/^(?:.*;)?\s*PHPSESSID\s*=\s*([^;]+)(?:.*)?$/)||[,null])[1];
+	$.ajax({
+				type: 'POST',
+				async: false,
+				url: 'scripts/session.php',
+				success: function(msg){
+				var js = JSON.parse(msg);
+				if(js[0] !== cook) {
+						window.location.href = "index.html";
+				}
+				else {
+					window.usrid = js[1]; 
+					}
+				}
+	});	
+	</script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="css/getHTMLMediaElement.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+<div class="limiter">
+<div class="row" style="font-size: 12px; min-height=5vh; padding:10px 20px; background-color:#959595;">
+		<div class="col-md-2">
+		</div>
+		
+		<div class="col-md-5" style="margin: 5px 20px 0;">
+		<span id="init"><input type="text" id="room-id" value="abcdef" autocorrect=off autocapitalize=off size=20>
+                <button id="open-or-join-room" class="plainbtn" onclick="start();">Join</button></span>
+             <span id="mbb" style="display: none;"><input type="text" class="design" id="itc" style='width: 80%; background: #ffffff8f;' placeholder="Press Enter to send."/> <button id="sendmsg" class="btn btn-success btn-sm" style="width:18%;" onclick="sendMessage();">Send</button></span>
+        </div>
+		<div class="col-md-4">
+                <span id="buttons" style="display: none">
+				<button id="enableaud" class="btn btn-info btn-sm" onclick="audCall('audio');">Audio Calling</button>
+                <button id="enablevid" class="btn btn-info btn-sm" onclick="audCall('video');">Video Calling</button>
+				<button id="disablevid" class="btn btn-info btn-sm" onclick="hangup();">End All</button>
+				<!--<button id="record" class="btn btn-info btn-sm">Record Screen</button>-->
+                <button id="share-screen" class="btn btn-info btn-sm" onclick="audCall('screen');">Share Screen + Audio</button> 
+                <input type="file" id="fselect" name="fselect" style="display:none;"/>
+				<button id="share-file" class="btn btn-info btn-sm">Share File</button> 
+                <button id="btn-leave-room" class="btn btn-info btn-sm" onclick="closeAll();">Leave</button>
+				<button id="btn-close-room" class="btn btn-info btn-sm" onclick="closeRoom();">Close Room</button>
+				
+				<!--<button id="alert" class="btn btn-info btn-sm"><i class="fa fa-info-circle" aria-hidden="true"></i></button>
+				<div class="alert alert-success alert-dismissable" style="display:none;">
+					<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+					<a href="https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk">Install chrome extension</a>					
+				</div> 
+				<span id="rinfo"></span> -->
+				</span>
+		</div>
+		</div>
+		<div class="row" style="margin: 10px 15px">
+			<div class="col-md-5" style="height:100%;">
+				<div class="chat-output scroll" id="msgbox" style="height: 200px;overflow: auto;"></div>
+			</div>
+			<div class="col-md-4" style="height:100%;">
+				<div class="design scroll" id="fileslist" style="height: 200px;overflow: auto;">  <div id="sflist"> Shared files: <br> </div> </div>
+			</div>
+			<div class="col-md-3" style="height:100%;">
+			<h1>Admin Camera</h1>
+			<hr>
+			Users:
+			<div id="userlist"></div><div id="peerZone"></div>
+			</div>
+		</div>
+		<div class="row" id="videos-container" style="height: fit-content;padding: 10px;margin: 10px 30px; background-color: #464646;">
+		<div class="caller-box" id="myvidbox" style="display: none;"><label>Me</label><video id="myvid" controls muted autoplay volume="0"></video></div>
+		</div>
+	
+	<!--
+	<div class="container-login100"  style="display: none; ">
+		<div class="wrap-chat100">
+		    <div class="container-fluid" style="width: 100%">
+	<div class="row" style="font-size: 12px; min-height=5vh;">
+            <div class="col-sm-12">
+                <span id="init">
+                <input type="text" id="room-id" value="abcdef" autocorrect=off autocapitalize=off size=20>
+                <button id="open-or-join-room"><div class="btn btn-info btn-sm">Join</div></button></span>
+                <span id="buttons" style="display: none">
+				<button id="enableaud"><div class="glossy">Audio Calling</div></button>
+                <button id="enablevid"><div class="glossy">Video Calling</div></button>
+				<button id="disablevid"><div class="glossy">End All</div></button>
+				<button id="record"><div class="glossy">Record Screen</div></button>
+                <button id="share-screen"><div class="glossy">Share Screen + Audio</div></button>
+                <button id="share-file"><div class="glossy">Share File</div></button>
+                <button id="btn-leave-room"><div class="glossy">Leave</div></button>
+				<button id="alert"><div class="glossy"><i class="fa fa-info-circle" aria-hidden="true"></i></div></button>
+				<div class="alert alert-success alert-dismissable" style="display:none;">
+					<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+					<a href="https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk">Install chrome extension</a>					
+				</div>
+				</span>
+            </div>
+        </div>
+		<div id="videos-container" class='videobox' style="position:absolute"></div>
+        <div class="row" style="font-size: 18px; margin-top:3vh; margin-bottom:2vh;">
+            <div class="col-sm-9 chat-output scroll" id="msgbox" style="height:75vh; width:70%;margin-right:2%; overflow: auto;">
+            </div> 
+            <div class="col-sm-3 text-center" style="height:75vh;">
+			<div class="row design scroll" id="userlist"  style="height: 45%; overflow: auto;"></div>
+			Shared files: 
+			<div class="row design scroll" id="fileslist" style="height: 50%; overflow: auto; "></div>
+            </div>
+        </div>
+        
+    </div>
+
+		</div>
+	</div>  -->
+	
+	
+	
+</div>
+    <script src="js/socket.io.js"></script>
+	<script src="js/easyrtc.js"></script>
+	<script src="js/easyrtc_ft.js"></script>
+	        <script src="https://cdn.webrtc-experiment.com/socket.io.js"> </script>
+        <script src="https://cdn.webrtc-experiment.com/DetectRTC.js"></script>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <script src="https://cdn.webrtc-experiment.com/CodecsHandler.js"></script>
+        <script src="https://cdn.webrtc-experiment.com/BandwidthHandler.js"></script>
+        <script src="https://cdn.webrtc-experiment.com/IceServersHandler.js"></script>
+	<script src="conference.js"></script>
+	<script src="js/chat.js"></script>
+	
+    <footer>
+        <small id="send-message"></small>
+    </footer>
+
+    <script src="https://cdn.webrtc-experiment.com/common.js"></script>
+</body>
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Upload Files</h4>
+      </div>
+      <div class="modal-body">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</html>

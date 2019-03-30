@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Welcome - Login</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/animate/animate.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="vendor/select2/select2.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="css/util.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+<!--===============================================================================================-->
+</head>
+<body>
+	
+	<div class="limiter">
+		<div class="container-login100">
+			<div class="wrap-login100">
+			<div class="logobar"><h3 style="float:right; color: #898989; padding-top: 10px;">Welcome to conference demo</h3></div>
+			<div class="login100-pic js-tilt" data-tilt>
+			<img src="Homepage.png"  style="height:  450px" />
+			</div>
+			<div id="main" class="login100-form validate-form">
+				<span class="login100-form-title p-t-50">
+				<a href="user_registration.html" >Click here to register </a>
+				</span>
+				<div class="container-login100-form-btn">
+					
+					<button id="adlogin" class="login100-form-btn">
+						Room Master
+					</button>
+				</div>
+			<div class="container-login100-form-btn">
+					<button id="ulogin" class="login100-form-btn">
+						Attendee
+					</button>
+				</div>
+				
+				<div class="container-login100-form-btn">
+					
+					<button id="user1" class="login100-form-btn">
+						CLICK HERE TO LOGIN AS ROOM MASTER DEMO
+					</button>
+				</div>
+			<div class="container-login100-form-btn">
+					<button id="user2" class="login100-form-btn">
+						CLICK HERE TO LOGIN AS ATTENDEE DEMO
+					</button>
+				</div>
+			</div>
+			<div id="login" class="login100-form validate-form" style="display: none">
+					<span class="lform login100-form-title">
+						Room Master Login
+					</span>
+					<span class="success error" style="display:none;"></span>
+					<div class="wrap-input100 validate-input" data-validate = "Valid email is required: ex@abc.xyz">
+						<input class="input100" type="text" name="email" placeholder="Email">
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<i class="fa fa-envelope" aria-hidden="true"></i>
+						</span>
+					</div>
+
+					<div class="wrap-input100 validate-input" data-validate = "Password is required">
+						<input class="input100" type="password" name="pass" placeholder="Password">
+						<span class="focus-input100"></span>
+						<span class="symbol-input100">
+							<i class="fa fa-lock" aria-hidden="true"></i>
+						</span>
+					</div>
+					
+					<div class="container-login100-form-btn">
+						<button class="submit login100-form-btn">
+							Login
+						</button>
+					</div>
+
+					<div class="text-center p-t-12">
+						<span class="txt1">
+							Forgot
+						</span>
+						<a class="txt2" href="#">
+							Username / Password?
+						</a>
+					</div>
+				</div>
+		</div>
+	</div>
+	</div>
+	
+	
+
+	
+<!--===============================================================================================-->	
+	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/bootstrap/js/popper.js"></script>
+	<script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="vendor/select2/select2.min.js"></script> 
+<!--===============================================================================================-->
+	<script src="vendor/tilt/tilt.jquery.min.js"></script>
+	<script >
+		$('.js-tilt').tilt({
+			scale: 1.1
+		});
+
+	</script>
+<!--===============================================================================================-->
+	<script src="js/main.js"></script>
+
+</body>
+</html>
