@@ -1,123 +1,198 @@
-'use strict';
-import {LitElement, html} from 'https://unpkg.com/@polymer/lit-element@0.6.2/lit-element.js?module';
+var appid = "2157ed7e-83ee-4e1f-a06c-97eedec16570";
+var ongoingCalls = {
+  screenShare: null,
+  audioCall: null
+};
+var baseUrl = getUrl();
 
-class ScreenSharing extends LitElement {
-  constructor() {
-    super();
-    this.enableStartCapture = true;
-    this.enableStopCapture = false;
-    this.enableDownloadRecording = false;
-    this.stream = null;
-    this.chunks = [];
-    this.mediaRecorder = null;
-    this.status = 'Inactive';
-    this.recording = null;
-  }
+console.log('baseUrl: ', baseUrl);
 
-  static get properties() {
-    return {
-      status: String,
-      enableStartCapture: Boolean,
-      enableStopCapture: Boolean,
-      enableDownloadRecording: Boolean,
-      recording: {
-        type: {
-          fromAttribute: input => input
+var room = "abcdef";
+
+var client = new respoke.Client({
+  appId: appid,
+  developmentMode: true
+});
+
+client.listen('connect', function() {
+  $('.share .link').text(room);
+});
+
+// called when we disconnect to the Respoke service
+client.listen('disconnect', function() {
+  $('#callControls').hide();
+});
+
+// listen for and answer incoming calls
+client.listen('call', function(evt) {
+  var call = evt.call;
+  if (call.caller !== true) {
+    if (call.incomingMedia.hasScreenShare()) {
+      call.answer({
+        onConnect: onConnect,
+        onLocalMedia: onLocalVideo,
+        onHangup: function() {
+          ongoingCalls.screenShare = null;
+          $('#callControls').hide();
         }
-      }
-    };
-  }
-
-  render() {
-    return html`<style>
-@import "../../../css/main.css";
-:host {
-  display: block;
-  padding: 10px;
-  width: 100%;
-  height: 100%;
-}
-video {
-    --video-width: 100%;
-    width: var(--video-width);
-    height: calc(var(--video-width) * (16 / 9));
-}
-</style>
-<video ?controls="${this.recording !== null}" playsinline autoplay loop muted .src="${this.recording}"></video>
-<div>
-<p>Status: ${this.status}</p>
-<button ?disabled="${!this.enableStartCapture}" @click="${e => this._startCapturing(e)}">Start screen capture</button>
-<button ?disabled="${!this.enableStopCapture}" @click="${e => this._stopCapturing(e)}">Stop screen capture</button>
-<button ?disabled="${!this.enableDownloadRecording}" @click="${e => this._downloadRecording(e)}">Download recording</button>
-<a id="downloadLink" type="video/webm" style="display: none"></a>
-</div>`;
-  }
-
-  static _startScreenCapture() {
-    if (navigator.getDisplayMedia) {
-      return navigator.getDisplayMedia({video: true});
-    } else if (navigator.mediaDevices.getDisplayMedia) {
-      return navigator.mediaDevices.getDisplayMedia({video: true});
+      });
     } else {
-      return navigator.mediaDevices.getUserMedia({video: {mediaSource: 'screen'}});
+      call.answer({
+        constraints: {
+          audio: true,
+          video: false
+        },
+        onConnect: function (evt) {
+          ongoingCalls.audioCall = evt.target;
+        },
+        onHangup: function () {
+          ongoingCalls.audioCall = null;
+        }
+      });
     }
   }
+});
 
-  async _startCapturing(e) {
-    console.log('Start capturing.');
-    this.status = 'Screen recording started.';
-    this.enableStartCapture = false;
-    this.enableStopCapture = true;
-    this.enableDownloadRecording = false;
-    this.requestUpdate('buttons');
-
-    if (this.recording) {
-      window.URL.revokeObjectURL(this.recording);
-    }
-
-    this.chunks = [];
-    this.recording = null;
-    this.stream = await ScreenSharing._startScreenCapture();
-    this.stream.addEventListener('inactive', e => {
-      console.log('Capture stream inactive - stop recording!');
-      this._stopCapturing(e);
-    });
-    this.mediaRecorder = new MediaRecorder(this.stream, {mimeType: 'video/webm'});
-    this.mediaRecorder.addEventListener('dataavailable', event => {
-      if (event.data && event.data.size > 0) {
-        this.chunks.push(event.data);
-      }
-    });
-    this.mediaRecorder.start(10);
+$('#hangupButton').click(function hangup() {
+  if (ongoingCalls.screenShare) {
+    ongoingCalls.screenShare.hangup();
   }
-
-  _stopCapturing(e) {
-    console.log('Stop capturing.');
-    this.status = 'Screen recorded completed.';
-    this.enableStartCapture = true;
-    this.enableStopCapture = false;
-    this.enableDownloadRecording = true;
-
-    this.mediaRecorder.stop();
-    this.mediaRecorder = null;
-    this.stream.getTracks().forEach(track => track.stop());
-    this.stream = null;
-
-    this.recording = window.URL.createObjectURL(new Blob(this.chunks, {type: 'video/webm'}));
+  if (ongoingCalls.audioCall) {
+    ongoingCalls.audioCall.hangup();
   }
+});
 
-  _downloadRecording(e) {
-    console.log('Download recording.');
-    this.enableStartCapture = true;
-    this.enableStopCapture = false;
-    this.enableDownloadRecording = false;
+console.log('connect()');
 
-    const downloadLink = this.shadowRoot.querySelector('a#downloadLink');
-    downloadLink.addEventListener('progress', e => console.log(e));
-    downloadLink.href = this.recording;
-    downloadLink.download = 'screen-recording.webm';
-    downloadLink.click();
+var endpoint = makeRandomString();
+
+console.log('client: ', client);
+console.log('client.calls.length: ', client.calls.length);
+
+client.connect({
+  endpointId: endpoint
+}).then(function connectDone() {
+  console.log('connected');
+
+  return client.join({
+    id: room,
+    onLeave: someoneLeft
+  });
+}).then(function roomJoined(group) {
+  console.log(group);
+
+  return group.getMembers();
+}).done(function getMembers(members) {
+  console.log('members: ', members);
+  console.log('members.length: ', members.length);
+
+  if(members.length > 2) {
+    console.log('members.length > 2');
+
+    $('.share .text').text("Sorry, that room is full. Join this room to screenshare:");
+    $('.share .link').text(room);
+  } else {
+    console.log('members.length <= 2');
+
+    members.forEach(function processEachMember(member) {
+      handleNewEndoint(client.endpointId, member.endpointId);
+    });
+  }
+});
+
+function someoneLeft(evt) {
+  console.log('someone left: ', evt);
+
+  if (ongoingCalls.screenShare && !evt.target.connections.length) {
+    ongoingCalls.screenShare.hangup();
+    $('#callControls').hide();
   }
 }
 
-customElements.define('screen-sharing', ScreenSharing);
+function handleNewEndoint(myName, theirName) {
+  if (myName === theirName) {
+    // don't call myself
+    return;
+  }
+
+  var otherEndpoint = client.getEndpoint({
+    id: theirName
+  });
+
+  otherEndpoint.startScreenShare({
+    onConnect: onConnect,
+    onLocalMedia: onLocalVideo,
+    onHangup: function () {
+      ongoingCalls.screenShare = null;
+      $('#callControls').hide();
+    }
+  });
+
+  setTimeout(function () {
+      otherEndpoint.startAudioCall({
+        onConnect: function (evt) {
+          ongoingCalls.audioCall = evt.target;
+        },
+        onHangup: function () {
+          ongoingCalls.audioCall = null;
+        }
+      });
+  }, 100);
+}
+
+function onConnect(evt) {
+  console.log('onConnect()', evt);
+
+  ongoingCalls.screenShare = evt.target;
+  $('#callControls').show();
+
+  if (!evt.element) {
+    console.log('no remote media to display');
+    return;
+  }
+
+  var $videoContainer = $('#videoContainer');
+  var $remoteVideo = $videoContainer.find('video');
+
+  console.log('attaching remote video', evt.element);
+
+  if($remoteVideo.length) {
+    console.log('attaching to', $remoteVideo);
+    $remoteVideo.replaceWith(evt.element);
+  } else {
+    console.log('appending to', $videoContainer);
+    $videoContainer.append(evt.element);
+  }
+}
+
+function onLocalVideo(evt) {
+  console.log('onLocalVideo()', evt);
+
+  var $videoContainer = $('#videoContainer');
+  var $localVideo = $videoContainer.find('video');
+
+  console.log('attaching local video', evt.element);
+  if($localVideo.length) {
+    console.log('attaching to', $localVideo);
+    $localVideo.replaceWith(evt.element);
+  } else {
+    console.log('appending to', $videoContainer);
+    $videoContainer.append(evt.element);
+  }
+}
+
+function makeRandomString() {
+  var newName = '';
+  var space = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789';
+
+  for (var i = 0; i <= 6; i += 1) {
+      newName += space.charAt(Math.floor(Math.random() * space.length));
+  }
+
+  return newName;
+}
+
+function getUrl() {
+	var components = window.location.href.split( '/' );
+	return components[0] + '//' + components[2] + '/' + components[3] + '/';
+}
